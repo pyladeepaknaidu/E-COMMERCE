@@ -4,18 +4,19 @@ generator client {
 }
 
 datasource db {
-    provider  = "postgresql"
-    url       = env("DATABASE_URL")
-    directUrl = env("DIRECT_URL")
+    provider = "postgresql"
 }
 
-// Required for creating a User: id, name, email, image, cart (optional JSON string)
+// Required for creating a User: id, name, email, password, image, cart (optional JSON string)
 model User {
-    id    String @id
-    name  String
-    email String
-    image String
-    cart  Json   @default("{}")
+    id       String  @id @default(cuid())
+    name     String
+    email    String  @unique
+    password String
+    image    String  @default("")
+    cart     Json    @default("{}")
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 
     // Relations
     ratings     Rating[]

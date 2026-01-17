@@ -1,16 +1,41 @@
 'use client'
-import { Search, ShoppingCart } from "lucide-react";
+import { Search, ShoppingCart, User, LogOut } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
+import toast from "react-hot-toast";
 
 const Navbar = () => {
 
     const router = useRouter();
 
     const [search, setSearch] = useState('')
+    const [user, setUser] = useState(null)
     const cartCount = useSelector(state => state.cart.total)
+
+    useEffect(() => {
+        // Check if user is logged in
+        const userData = localStorage.getItem('user')
+        if (userData) {
+            setUser(JSON.parse(userData))
+        }
+    }, [])
+
+    const handleLogout = async () => {
+        try {
+            await fetch('/api/auth/logout', { method: 'POST' })
+            localStorage.removeItem('user')
+            localStorage.removeItem('token')
+            setUser(null)
+            toast.success('Logged out successfully')
+            router.push('/')
+            router.refresh()
+        } catch (error) {
+            console.error('Logout error:', error)
+            toast.error('Logout failed')
+        }
+    }
 
     const handleSearch = (e) => {
         e.preventDefault()
@@ -47,17 +72,43 @@ const Navbar = () => {
                             <button className="absolute -top-1 left-3 text-[8px] text-white bg-slate-600 size-3.5 rounded-full">{cartCount}</button>
                         </Link>
 
-                        <button className="px-8 py-2 bg-indigo-500 hover:bg-indigo-600 transition text-white rounded-full">
-                            Login
-                        </button>
+                        {user ? (
+                            <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2 text-slate-600">
+                                    <User size={18} />
+                                    <span className="text-sm">{user.name}</span>
+                                </div>
+                                <button 
+                                    onClick={handleLogout}
+                                    className="px-6 py-2 bg-slate-600 hover:bg-slate-700 transition text-white rounded-full flex items-center gap-2 text-sm"
+                                >
+                                    <LogOut size={16} />
+                                    Logout
+                                </button>
+                            </div>
+                        ) : (
+                            <Link href="/login" className="px-8 py-2 bg-indigo-500 hover:bg-indigo-600 transition text-white rounded-full">
+                                Login
+                            </Link>
+                        )}
 
                     </div>
 
                     {/* Mobile User Button  */}
                     <div className="sm:hidden">
-                        <button className="px-7 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-sm transition text-white rounded-full">
-                            Login
-                        </button>
+                        {user ? (
+                            <button 
+                                onClick={handleLogout}
+                                className="px-6 py-1.5 bg-slate-600 hover:bg-slate-700 text-sm transition text-white rounded-full flex items-center gap-2"
+                            >
+                                <LogOut size={16} />
+                                Logout
+                            </button>
+                        ) : (
+                            <Link href="/login" className="px-7 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-sm transition text-white rounded-full">
+                                Login
+                            </Link>
+                        )}
                     </div>
                 </div>
             </div>
