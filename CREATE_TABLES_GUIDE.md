@@ -27,10 +27,10 @@ DIRECT_URL="postgresql://postgres:your_password@localhost:5432/your_database_nam
 JWT_SECRET="your-secret-key-change-in-production"
 ```
 
-### Example (if your database name is `gocart`):
+### Example (if your database name is `flashman`):
 ```env
-DATABASE_URL="postgresql://postgres:mypassword123@localhost:5432/gocart?schema=public"
-DIRECT_URL="postgresql://postgres:mypassword123@localhost:5432/gocart?schema=public"
+DATABASE_URL="postgresql://postgres:mypassword123@localhost:5432/flashman?schema=public"
+DIRECT_URL="postgresql://postgres:mypassword123@localhost:5432/flashman?schema=public"
 JWT_SECRET="my-super-secret-jwt-key-12345"
 ```
 

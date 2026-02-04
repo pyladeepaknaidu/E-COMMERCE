@@ -3,6 +3,7 @@
  * Connection URLs are configured here instead of schema.prisma
  * This file must be in the ROOT directory, not in prisma/ folder
  */
+import "dotenv/config"
 import { defineConfig, env } from "prisma/config"
 
 export default defineConfig({

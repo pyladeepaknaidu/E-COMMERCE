@@ -71,7 +71,7 @@ export default function SignupPage() {
             <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-semibold text-slate-800 mb-2">
-                        Create your <span className="text-green-600">GoCart</span> account
+                        Create your <span className="text-slate-900">FLASH</span> <span className="text-red-600">⚡</span> <span className="text-slate-900">MAN</span> account
                     </h1>
                     <p className="text-slate-600">Join us and start shopping</p>
                 </div>

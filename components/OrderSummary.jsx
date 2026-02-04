@@ -1,9 +1,10 @@
 import { PlusIcon, SquarePenIcon, XIcon } from 'lucide-react';
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import AddressModal from './AddressModal';
 import { useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import PayPalButton from './PayPalButton';
 
 const OrderSummary = ({ totalPrice, items }) => {
 
@@ -18,6 +19,22 @@ const OrderSummary = ({ totalPrice, items }) => {
     const [showAddressModal, setShowAddressModal] = useState(false);
     const [couponCodeInput, setCouponCodeInput] = useState('');
     const [coupon, setCoupon] = useState('');
+    const [user, setUser] = useState(null);
+
+    // Get user from localStorage
+    useEffect(() => {
+        const userData = localStorage.getItem('user')
+        if (userData) {
+            try {
+                setUser(JSON.parse(userData))
+            } catch (error) {
+                console.error('Error parsing user data:', error)
+            }
+        }
+    }, [])
+
+    // Get storeId from items (all items should be from the same store)
+    const storeId = items.length > 0 ? items[0].storeId : null
 
     const handleCouponCode = async (event) => {
         event.preventDefault();
@@ -27,7 +44,59 @@ const OrderSummary = ({ totalPrice, items }) => {
     const handlePlaceOrder = async (e) => {
         e.preventDefault();
 
-        router.push('/orders')
+        // Validation
+        if (!selectedAddress) {
+            toast.error('Please select an address')
+            return
+        }
+
+        if (!user) {
+            toast.error('Please login to place order')
+            router.push('/login')
+            return
+        }
+
+        // For COD orders, handle directly
+        if (paymentMethod === 'COD') {
+            try {
+                const finalTotal = coupon ? (totalPrice - (coupon.discount / 100 * totalPrice)) : totalPrice
+                
+                const response = await fetch('/api/orders/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        items,
+                        total: finalTotal,
+                        userId: user.id,
+                        storeId,
+                        addressId: selectedAddress.id,
+                        paymentMethod: 'COD',
+                        coupon: coupon || {}
+                    }),
+                })
+
+                const data = await response.json()
+                
+                if (data.success) {
+                    toast.success('Order placed successfully!')
+                    router.push('/orders')
+                    router.refresh()
+                } else {
+                    toast.error(data.error || 'Failed to place order')
+                }
+            } catch (error) {
+                console.error('Order error:', error)
+                toast.error('Failed to place order')
+            }
+        }
+        // For PayPal and Stripe, they have their own handlers
+    }
+
+    const handlePayPalSuccess = (order) => {
+        toast.success('Payment successful! Order placed.')
+        // Cart will be cleared by the PayPal button component
     }
 
     return (
@@ -41,6 +110,10 @@ const OrderSummary = ({ totalPrice, items }) => {
             <div className='flex gap-2 items-center mt-1'>
                 <input type="radio" id="STRIPE" name='payment' onChange={() => setPaymentMethod('STRIPE')} checked={paymentMethod === 'STRIPE'} className='accent-gray-500' />
                 <label htmlFor="STRIPE" className='cursor-pointer'>Stripe Payment</label>
+            </div>
+            <div className='flex gap-2 items-center mt-1'>
+                <input type="radio" id="PAYPAL" name='payment' onChange={() => setPaymentMethod('PAYPAL')} checked={paymentMethod === 'PAYPAL'} className='accent-gray-500' />
+                <label htmlFor="PAYPAL" className='cursor-pointer'>PayPal</label>
             </div>
             <div className='my-4 py-4 border-y border-slate-200 text-slate-400'>
                 <p>Address</p>
@@ -101,7 +174,31 @@ const OrderSummary = ({ totalPrice, items }) => {
                 <p>Total:</p>
                 <p className='font-medium text-right'>{currency}{coupon ? (totalPrice - (coupon.discount / 100 * totalPrice)).toFixed(2) : totalPrice.toLocaleString()}</p>
             </div>
-            <button onClick={e => toast.promise(handlePlaceOrder(e), { loading: 'placing Order...' })} className='w-full bg-slate-700 text-white py-2.5 rounded hover:bg-slate-900 active:scale-95 transition-all'>Place Order</button>
+
+            {/* PayPal Payment Button */}
+            {paymentMethod === 'PAYPAL' && selectedAddress && user && storeId && (
+                <div className='mb-4'>
+                    <PayPalButton
+                        amount={coupon ? (totalPrice - (coupon.discount / 100 * totalPrice)) : totalPrice}
+                        items={items}
+                        userId={user.id}
+                        storeId={storeId}
+                        addressId={selectedAddress.id}
+                        coupon={coupon || {}}
+                        onSuccess={handlePayPalSuccess}
+                    />
+                </div>
+            )}
+
+            {/* Regular Place Order Button (for COD and Stripe) */}
+            {(paymentMethod === 'COD' || paymentMethod === 'STRIPE') && (
+                <button 
+                    onClick={e => toast.promise(handlePlaceOrder(e), { loading: 'placing Order...' })} 
+                    className='w-full bg-slate-700 text-white py-2.5 rounded hover:bg-slate-900 active:scale-95 transition-all'
+                >
+                    Place Order
+                </button>
+            )}
 
             {showAddressModal && <AddressModal setShowAddressModal={setShowAddressModal} />}
 

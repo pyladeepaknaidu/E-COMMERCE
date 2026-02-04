@@ -1,4 +1,4 @@
-# Database Setup Guide for GoCart
+# Database Setup Guide for FLASH MAN
 
 ## Understanding Database URLs
 
@@ -57,13 +57,13 @@ If you have PostgreSQL installed on your computer:
 
 ### Step 1: Create a database in PgAdmin or psql
 ```sql
-CREATE DATABASE gocart;
+CREATE DATABASE flashman;
 ```
 
 ### Step 2: Use this connection string format:
 ```env
-DATABASE_URL="postgresql://[username]:[password]@localhost:5432/gocart?schema=public"
-DIRECT_URL="postgresql://[username]:[password]@localhost:5432/gocart?schema=public"
+DATABASE_URL="postgresql://[username]:[password]@localhost:5432/flashman?schema=public"
+DIRECT_URL="postgresql://[username]:[password]@localhost:5432/flashman?schema=public"
 ```
 
 **Default credentials** (if you haven't changed them):
